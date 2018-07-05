@@ -51,49 +51,49 @@
 #include "cj188.h"
 #include "main.h"
 /*
-�?�?  Neruogrid-Class-LORA 协议�?
-1�?     网络ID   网络ID   设备ID   设备ID   RX窗口   前导�?    心跳周期  采集周期 数据帧开始码 数据帧开始码 数据帧长�?  数据
+一、  Neruogrid-Class-LORA 协议：
+1、     网络ID   网络ID   设备ID   设备ID   RX窗口   前导码    心跳周期  采集周期 数据帧开始码 数据帧开始码 数据帧长度  数据
 symb:	NwkID[0] NwkID[1] DevID[0] DevID[1] DevRxGap  PrebSymb  Heartbeat  Collect  Sync1(0xa5)  Sync2(0x5a)  DATA_LEN    DATA
       	 |        |         |         |         |      |          |          |           |         |           |         |    
       	 |        |         |         |         |      |          |          |           |         |           | 	       | 
 byte:    0        1         2         3         4    5 - 6      7 - 8      9 - 10   	  11         12         13       14 - N
 
-2       Neruogrid-Class-LORA支持如下两种模式�?
-		Ø  Neruogrid-ClassA-LORA   超低功�?�模式，模块只在心跳时发送�?�接收信号，其余时间处于休眠模式
+2       Neruogrid-Class-LORA支持如下两种模式：
+		Ø  Neruogrid-ClassA-LORA   超低功耗模式，模块只在心跳时发送、接收信号，其余时间处于休眠模式
 		Ø  Neruogrid-ClassC-LORA   低功耗模式，模块周期性监听无线信号，收到信号自动唤醒  
-		Ø 水表、气表�?�热量表LORA模块工作�? Neruogrid-ClassA-LORA 模式
-		Ø 电表LORA模块工作�? Neruogrid-ClassC-LORA 模式
+		Ø 水表、气表、热量表LORA模块工作在 Neruogrid-ClassA-LORA 模式
+		Ø 电表LORA模块工作在 Neruogrid-ClassC-LORA 模式
 
-3、LORA模块通讯参数�?
-        中心频率�?  434Mhz
-        扩频因子�?  1024
-        �?    宽：  250Khz
-        �? �? 码：  4/5
-        CRC校验�?   �?
-        �?   头：   显式
+3、LORA模块通讯参数：
+        中心频率：  434Mhz
+        扩频因子：  1024
+        带    宽：  250Khz
+        纠 错 码：  4/5
+        CRC校验：   有
+        报   头：   显式
      
-二�?�功耗设�?
-1、水表�?�气表�?�热量表LORA模块�?要与表具安装在一起或外挂方式，采�? Neruogrid-ClassA-LORA 超低功�?�协议，休眠周期默认�?24小时�?
-    Neruogrid-ClassA-LORA工作模式如下�?
+二、功耗设计
+1、水表、气表、热量表LORA模块需要与表具安装在一起或外挂方式，采用 Neruogrid-ClassA-LORA 超低功耗协议，休眠周期默认为24小时。
+    Neruogrid-ClassA-LORA工作模式如下：
                 __                               __   ____	         	             
       _________|  |__|__|_______________________|  |_|    |________________
 
               呼吸|gap1|gap2     睡眠           呼吸 gap1收到网关命令   
       
-2、电表LORA模块安装在表箱或电表内部，模块支�?220V供电，采�? Neruogrid-ClassC-LORA 低功耗呼吸监听协议�??
+2、电表LORA模块安装在表箱或电表内部，模块支持220V供电，采用 Neruogrid-ClassC-LORA 低功耗呼吸监听协议。
 
-    Neruogrid-ClassC-LORA工作模式如下�?
+    Neruogrid-ClassC-LORA工作模式如下：
 		            __ 	                  __ 	         __  	             
       _________|  |__________________|  |_________|  |________    
 
        睡眠   接收网关命令  睡眠    接收网关命令
 
       
-三�?�水、电、气、热表具类型以及通讯地址处理
+三、水、电、气、热表具类型以及通讯地址处理
 
-1、LORA模块与水表�?�气表�?�热量表�?对一连接，�?�过广播地址进行通讯�?
+1、LORA模块与水表、气表、热量表一对一连接，通过广播地址进行通讯。
 
-2、LORA模块与电表一对多连接，LORA模块按网关命令所指地�?与电表进行�?�讯�?
+2、LORA模块与电表一对多连接，LORA模块按网关命令所指地址与电表进行通讯。
 
 3、LORA模块通过硬件码序选择通讯协议，编码如下：
 	         PIN0 PIN1      协议
@@ -102,41 +102,41 @@ byte:    0        1         2         3         4    5 - 6      7 - 8      9 - 1
      热表   1    0       CJ188
      电表   1    1       DLT645
 
-四�?? Neruogrid-Class-LORA 网关工作模式
+四、 Neruogrid-Class-LORA 网关工作模式
 
-1�? Neruogrid-ClassA-LORA模式�?
-    网关无发送任务时，进入RXcontinue模式，监听水表�?�气表�?�热量表LORA模块的心跳，当收到心跳后，接收LORA模块计量数据，当有主动采集任务时，按照Neruogrid-ClassA-LORA规范，下发采集命令�??
-    网关工作模式如下�?
+1、 Neruogrid-ClassA-LORA模式：
+    网关无发送任务时，进入RXcontinue模式，监听水表、气表、热量表LORA模块的心跳，当收到心跳后，接收LORA模块计量数据，当有主动采集任务时，按照Neruogrid-ClassA-LORA规范，下发采集命令。
+    网关工作模式如下：
 				                __                 __  __
       _________|_______|  |_______|_______|  ||  |____
 
-              监听   接收到数�?         接收到数据\下发采集命令
+              监听   接收到数据         接收到数据\下发采集命令
 
-2、Neruogrid-ClassC-LORA模式�? 
-      网关判断采集策略，向LORO模块发�?�采集命令，LORA模块在监听模式下收到网关采集命令，按照网关命令中的电表�?�讯地址采集电表数据，并将数据返回网关�??
-    网关工作模式如下�?
+2、Neruogrid-ClassC-LORA模式： 
+      网关判断采集策略，向LORO模块发送采集命令，LORA模块在监听模式下收到网关采集命令，按照网关命令中的电表通讯地址采集电表数据，并将数据返回网关。
+    网关工作模式如下：
 	              __ 	                  __ 	         __  	       
       _________|  |__________________|  |_________|  |________
 
-            发�?�采集命�?          发�?�采集命�?	
+            发送采集命令          发送采集命令	
 
 
 
-五�?�使用说�?
+五、使用说明
 
 1、节点工作模式：
 
-LoRaClassType = LoRaClassA  ：节点工作在超低功�?�模式A，节点只会在设定的心跳周期内唤醒，采集数据发送给网关后，进行休眠，在休眠期间不能接收任何外部信号
+LoRaClassType = LoRaClassA  ：节点工作在超低功耗模式A，节点只会在设定的心跳周期内唤醒，采集数据发送给网关后，进行休眠，在休眠期间不能接收任何外部信号
 
-LoRaClassType = LoRaClassC  ：节点工作在低功耗模式C，节点每�?4秒钟，自动苏醒一次，监测外部信号，如果有匹配的信号，则接收数据�??
+LoRaClassType = LoRaClassC  ：节点工作在低功耗模式C，节点每隔4秒钟，自动苏醒一次，监测外部信号，如果有匹配的信号，则接收数据。
 
-2、节点串口波特率�?
+2、节点串口波特率：
 
-节点对外的串口，默认波特率为 2400 偶校�?
+节点对外的串口，默认波特率为 2400 偶校验
 
-3、节点类型�?�择：METER_TYPE
+3、节点类型选择：METER_TYPE
 
-节点类型：水电气热�?�可以�?�过软件设置,模块根据对应的节点类型，自动判断抄表协议
+节点类型：水电气热。可以通过软件设置,模块根据对应的节点类型，自动判断抄表协议
 
 
 
@@ -144,13 +144,13 @@ LoRaDevice.type = ELECTOR_METER    电表类型、DLT645-2007协议
 
 LoRaDevice.type = WATER_METER      水表类型、CL188协议
 
-LoRaDevice.type = HEART_METER      热量表类型�?�CL188协议
+LoRaDevice.type = HEART_METER      热量表类型、CL188协议
 
-LoRaDevice.type = GAS_METER        燃气表类型�?�CL188协议
+LoRaDevice.type = GAS_METER        燃气表类型、CL188协议
 
 
 
-六�?�STM32L151CB 硬件资源
+六、STM32L151CB 硬件资源
 
 		SPI1  ---  SX1278
 		UART1 ---  METER     2400 E 8 1  
@@ -169,9 +169,9 @@ LoRaDevice.type = GAS_METER        燃气表类型�?�CL188协议
 #define HOURE    (60*MINITE)
 
 #if(JOHN_DEBUG)
-#define SYSTEM_SLEEP_TIME       (20*SECOND) //调试时：30�?
+#define SYSTEM_SLEEP_TIME       (20*SECOND) //调试时：30秒
 #else
-#define SYSTEM_SLEEP_TIME       (20*HOURE)  //正常运行默认�?24小时  单位秒：65535�? = 21小时
+#define SYSTEM_SLEEP_TIME       (20*HOURE)  //正常运行默认：24小时  单位秒：65535秒 = 21小时
 #endif
 
 #define DEVICE_RESPONSE_TIMEOUT 1000     //设备反馈超时时间
@@ -183,17 +183,17 @@ LoRaDevice.type = GAS_METER        燃气表类型�?�CL188协议
 
 //  表计类型
 #define  ELECTOR_METER        0x40           //电表
-#define  GAS_METER            0x30           //燃气�?
+#define  GAS_METER            0x30           //燃气表
 #define  WATER_METER          0x10           //水表
-#define  HEART_METER          0x20           //热量�?
+#define  HEART_METER          0x20           //热量表
 #define METER_TYPE ELECTOR_METER
 
 /***************************************************************************************************************/
 typedef struct
 {
-	uint8_t Sync1;            //配置帧开始标�?    0xaa
-	uint8_t Sync2;            //配置帧开始标�?    0x55
-	uint8_t type;             //配置帧类�?        0x00:网络地址, 0x01:设备地址, 0x10:心跳周期, 0x11:采集周期 
+	uint8_t Sync1;            //配置帧开始标识    0xaa
+	uint8_t Sync2;            //配置帧开始标识    0x55
+	uint8_t type;             //配置帧类型        0x00:网络地址, 0x01:设备地址, 0x10:心跳周期, 0x11:采集周期 
 	uint8_t data0;            //配置帧数据位0
 	uint8_t data1;            //配置帧数据位1
 	uint8_t cs;               //配置帧校验位      Sync1 + Sync2 + type + data0 + data1 + cs
@@ -204,11 +204,11 @@ typedef struct
 	uint8_t NwkID[2];         //无线网络地址
 	uint8_t DevID[2];         //无线节点地址
 	uint8_t DevRxGap;         //接收串口间隔时间  1 byte	   单位：秒
-	uint16_t PrebSymb;        //前导�?            2 bytes    
-	uint16_t Heartbeat;       //心跳周期          2 bytes    单位：分�?
-	uint16_t Collect;         //采集周期          2 bytes    单位：分�? ，默认采集周期等于心跳周�?
-	uint8_t Sync1;            //数据帧开始标�?    0xA5
-	uint8_t Sync2;            //数据帧开始标�?    0x5A
+	uint16_t PrebSymb;        //前导码            2 bytes    
+	uint16_t Heartbeat;       //心跳周期          2 bytes    单位：分钟
+	uint16_t Collect;         //采集周期          2 bytes    单位：分钟 ，默认采集周期等于心跳周期
+	uint8_t Sync1;            //数据帧开始标识    0xA5
+	uint8_t Sync2;            //数据帧开始标识    0x5A
 	uint8_t Dlen;             //用户数据长度
 	uint8_t Buff[PAYLOAD_DATABUFF_SIZE];
 }sPayLoadType;
@@ -247,23 +247,23 @@ enum t_ClassState
 }LoRaProtocolState = sIDLE;
 
                               
-#define TXWindowTimeOut     10000                       // 发�?�超时时�?
+#define TXWindowTimeOut     10000                       // 发送超时时间
 #define DEV_ID_LEN  10                                 // 设备通讯地址：ID长度
-typedef struct                                         //表具数据�?
+typedef struct                                         //表具数据帧
 {
 	uint8_t type;               //设备类型
   uint8_t id[DEV_ID_LEN];
   uint8_t NwkID[2];         //无线网络地址
 	uint8_t DevID[2];         //无线节点地址
 	uint8_t DevRxGap;         //接收串口间隔时间  1 byte	   单位：秒
-	uint16_t PrebSymb;        //前导�?            2 bytes    
-	uint16_t Heartbeat;       //心跳周期          2 bytes    单位：分�?
-	uint16_t Collect;         //采集周期          2 bytes    单位：分�? ，默认采集周期等于心跳周�?
+	uint16_t PrebSymb;        //前导码            2 bytes    
+	uint16_t Heartbeat;       //心跳周期          2 bytes    单位：分钟
+	uint16_t Collect;         //采集周期          2 bytes    单位：分钟 ，默认采集周期等于心跳周期
 }t_LoRaDevice;
 
 
 
-t_LoRaDevice LoRaDevice;                              //表具数据�?
+t_LoRaDevice LoRaDevice;                              //表具数据帧
 
 tRFProcessReturnCodes RfResult;
 
@@ -285,9 +285,9 @@ const uint8_t NetAddr[2] = {'L','O'};
 
 const uint8_t NodeAddr[2] = {'R','A'};
 
-uint8_t	RecvGatewayCmd = 0;                 //节点心跳后收到网关数�?
+uint8_t	RecvGatewayCmd = 0;                 //节点心跳后收到网关数据
 
-uint32_t RecvGatewayCmdTimeOut;             //收到网关数据并转发给设备，等待设备反馈时�?
+uint32_t RecvGatewayCmdTimeOut;             //收到网关数据并转发给设备，等待设备反馈时间
 
 /* USER CODE END PV */
 
@@ -310,7 +310,7 @@ void HAL_SYSTICK_Callback(void)
 void SysTick_Init()
 {
 	int i; 
-  SystemTick = i;             //获取随机变量�?
+  SystemTick = i;             //获取随机变量值
   Debug("\r\nSysTick_Init SystemTick:%d!",SystemTick);
 }
 
@@ -327,21 +327,21 @@ void LoRaPayLoadInit(void)
 	pRFPayLoad->DevID[1] = 'A';
 	
 	pRFPayLoad->DevRxGap = 5;
-	pRFPayLoad->PrebSymb = Preamble_Default;	       //默认�? 8 
+	pRFPayLoad->PrebSymb = Preamble_Default;	       //默认为 8 
 
 	if(LoRaClassType == LoRaClassC) //电表采用监控呼吸模块：ClassC
 		{
-			pRFPayLoad->Heartbeat = LORA_SLEEP_TIME/1000;      //默认12小时发�?�一次心跳，在心跳中发�?�采集的数据
-			pRFPayLoad->Collect = 0;        //默认12小时采集�?次数据，默认采集周期等于心跳周期
+			pRFPayLoad->Heartbeat = LORA_SLEEP_TIME/1000;      //默认12小时发送一次心跳，在心跳中发送采集的数据
+			pRFPayLoad->Collect = 0;        //默认12小时采集一次数据，默认采集周期等于心跳周期
 		}
 	else
 		{
-			pRFPayLoad->Heartbeat = SYSTEM_SLEEP_TIME;      //默认12小时发�?�一次心跳，在心跳中发�?�采集的数据
-			pRFPayLoad->Collect = SYSTEM_SLEEP_TIME;        //默认12小时采集�?次数据，默认采集周期等于心跳周期
+			pRFPayLoad->Heartbeat = SYSTEM_SLEEP_TIME;      //默认12小时发送一次心跳，在心跳中发送采集的数据
+			pRFPayLoad->Collect = SYSTEM_SLEEP_TIME;        //默认12小时采集一次数据，默认采集周期等于心跳周期
 		}
-	pRFPayLoad->Sync1 = 0xA5;                        //数据帧开始标�?    0xA5
-	pRFPayLoad->Sync2 = 0x5A;                        //数据帧开始标�?    0x5A
-	pRFPayLoad->Dlen = 0;                            //初始化用户数据长�? = 0
+	pRFPayLoad->Sync1 = 0xA5;                        //数据帧开始标识    0xA5
+	pRFPayLoad->Sync2 = 0x5A;                        //数据帧开始标识    0x5A
+	pRFPayLoad->Dlen = 0;                            //初始化用户数据长度 = 0
 
 }
 
@@ -405,13 +405,13 @@ static void LoRaDeviceInit(void)
 	LoRaDevice.PrebSymb = Preamble_Default;
 	if(LoRaClassType == LoRaClassC) //电表采用监控呼吸模块：ClassC
 		{
-			LoRaDevice.Heartbeat = LORA_SLEEP_TIME/1000;      //默认12小时发�?�一次心跳，在心跳中发�?�采集的数据
-			LoRaDevice.Collect = 0;        //默认12小时采集�?次数据，默认采集周期等于心跳周期
+			LoRaDevice.Heartbeat = LORA_SLEEP_TIME/1000;      //默认12小时发送一次心跳，在心跳中发送采集的数据
+			LoRaDevice.Collect = 0;        //默认12小时采集一次数据，默认采集周期等于心跳周期
 		}
 	else
 		{
-			LoRaDevice.Heartbeat = SYSTEM_SLEEP_TIME;      //默认12小时发�?�一次心跳，在心跳中发�?�采集的数据
-			LoRaDevice.Collect = SYSTEM_SLEEP_TIME;        //默认12小时采集�?次数据，默认采集周期等于心跳周期
+			LoRaDevice.Heartbeat = SYSTEM_SLEEP_TIME;      //默认12小时发送一次心跳，在心跳中发送采集的数据
+			LoRaDevice.Collect = SYSTEM_SLEEP_TIME;        //默认12小时采集一次数据，默认采集周期等于心跳周期
 		}
 }
 
@@ -464,7 +464,7 @@ static void SystemSleep(int second)
 int LoRaNodeCollectData(uint8_t *data)
 {
   if(LoRaDevice.type == ELECTOR_METER)
-    return dlt645_collect_meter(LoRaDevice.id,data,ENERGY_FORWARDA);	 //默认只采集正向有功�?�电�?
+    return dlt645_collect_meter(LoRaDevice.id,data,ENERGY_FORWARDA);	 //默认只采集正向有功总电能
 		
 	else if(LoRaDevice.type == WATER_METER || LoRaDevice.type == GAS_METER || LoRaDevice.type == HEART_METER)
 		return cj188_collect_meter(LoRaDevice.id,data,LoRaDevice.type);	
@@ -476,7 +476,7 @@ int LoRaNodeCollectData(uint8_t *data)
 void SetLoRaCommPram(void)
 {
 	uint8_t len;
-  if(LoRaClassType == LoRaClassC)              //监控呼吸ClassC 下不�?要更改�?�讯参数
+  if(LoRaClassType == LoRaClassC)              //监控呼吸ClassC 下不需要更改通讯参数
 	{
 			LoRaPayLoadInit();
 			return;
@@ -484,14 +484,14 @@ void SetLoRaCommPram(void)
 	len = 2 + GET_TICK_COUNT( ) % 4;
   Debug("\r\n len = %d",len);
 	LoRaDevice.DevRxGap = len;                                              //随机设置接收窗口窗口时间  [0~6]
-	LoRaDevice.PrebSymb = GetPreambSymbols(2*LORA_BREATH_TIME + LoRaDevice.DevRxGap*1000); //节点对应的前导码,网关发�?�前导码必须与此值一致才能与此节点�?�讯
+	LoRaDevice.PrebSymb = GetPreambSymbols(2*LORA_BREATH_TIME + LoRaDevice.DevRxGap*1000); //节点对应的前导码,网关发送前导码必须与此值一致才能与此节点通讯
 	LoRaDevice.Heartbeat = LoRaDevice.Heartbeat;
 	
 	Debug("\r\nNode LoRaDevice.Heartbeat=%d,RxGap=%2ds,PreambleSymbols=%2d",LoRaDevice.Heartbeat,LoRaDevice.DevRxGap,LoRaDevice.PrebSymb);	
 
-	PayLoadBuff[RXGAP_OFFSET] = LoRaDevice.DevRxGap - 1;                  //节点接收窗口,网关在LoRaDevice.DevRxGap提前1s发�?�前导码
+	PayLoadBuff[RXGAP_OFFSET] = LoRaDevice.DevRxGap - 1;                  //节点接收窗口,网关在LoRaDevice.DevRxGap提前1s发送前导码
 	
-  PayLoadBuff[PREAMB_OFFSET] = (LoRaDevice.PrebSymb >> 8) & 0x00FF;  //节点本次接收窗口前导�?
+  PayLoadBuff[PREAMB_OFFSET] = (LoRaDevice.PrebSymb >> 8) & 0x00FF;  //节点本次接收窗口前导码
 	PayLoadBuff[PREAMB_OFFSET + 1] = LoRaDevice.PrebSymb & 0xFF;	
 
   PayLoadBuff[HEART_OFFSET] = (LoRaDevice.Heartbeat >> 8) & 0x00FF;  //节点心跳周期
@@ -505,10 +505,10 @@ void LoRaNodeHeartBreath(void)
 {
 	uint8_t data[256] = {'\0'};
   uint8_t nbyte;
-  SetLoRaCommPram();                             //LORA通讯参数初始�?
+  SetLoRaCommPram();                             //LORA通讯参数初始化
   nbyte = LoRaNodeCollectData(data);             //采集数据
   HAL_UART_Transmit(&huart1,data, nbyte, 0xFFFF);
-  HAL_Delay(2000);                                //波特率为2400时，传输256个字节时长为1�?
+  HAL_Delay(2000);                                //波特率为2400时，传输256个字节时长为1秒
   pRFPayLoad->Dlen = 0;
 	if(UsartType.RX_flag == 1)    	//  串口接收
 		{ 
@@ -520,14 +520,14 @@ void LoRaNodeHeartBreath(void)
 				memcpy(pRFPayLoad->Buff,UsartType.RX_pData,pRFPayLoad->Dlen);                      //获取串口数据
     }
   PayLoadLen = (DATA_OFFSET + 1 + pRFPayLoad->Dlen);
-  SX1276LoRaSetTxPacket( PayLoadBuff, PayLoadLen);     //将串口数据按照LORA帧格式组装，并发送出�?!
+  SX1276LoRaSetTxPacket( PayLoadBuff, PayLoadLen);     //将串口数据按照LORA帧格式组装，并发送出去!
 	SetLoRaTx();
 	
 	Debug("\r\n=>%d Data to rf:",PayLoadLen);
 	for(int i=0;i<PayLoadLen;i++)
 		Debug("0x%2x ",PayLoadBuff[i]);
 	
-	LoRaProtocolState = TXWindow1;             //设置发�?�状�?
+	LoRaProtocolState = TXWindow1;             //设置发送状态
 }
 
 
@@ -541,10 +541,10 @@ void gateway_process(void)             //收到网关命令
 }
 
 /*******************************************************************************************
-1、节点心跳，每隔Breath_time,自动唤醒上传�?次数�?
-2、上行数据发送完成后，紧�?2个接收窗口，完成接收操作后再次进入休�?
-3、在第一个接收窗口收到数据，直接进入休眠，忽略后�?个接收窗�?
-4、网关必须一致处于接收监听状态，并在收到节点上行数据后，在确定的时间窗口发�?�下行数�?
+1、节点心跳，每隔Breath_time,自动唤醒上传一次数据
+2、上行数据发送完成后，紧跟2个接收窗口，完成接收操作后再次进入休眠
+3、在第一个接收窗口收到数据，直接进入休眠，忽略后一个接收窗口
+4、网关必须一致处于接收监听状态，并在收到节点上行数据后，在确定的时间窗口发送下行数据
 *******************************************************************************************/
 
 void lora_protocol_process(void)
@@ -564,7 +564,7 @@ void lora_protocol_process(void)
 			}
 			else
 			{
-				if((GET_TICK_COUNT( ) - delay) > TXWindowTimeOut)   //发�?�失�?
+				if((GET_TICK_COUNT( ) - delay) > TXWindowTimeOut)   //发送失败
 				{
 					SX1276LoRaSetPreambleLength(Preamble_Default);      // 恢复 前导码为默认值：8
 					Debug("\r\nRF_RX_DONE goto sIDLE ");
@@ -577,7 +577,7 @@ void lora_protocol_process(void)
 				Debug("\r\nRXWindow1Gap sleep");
 				SystemSleep(LoRaDevice.DevRxGap);		
 				Debug("\r\n%ds Wakeup!",LoRaDevice.DevRxGap);				
-				SX1276LoRaSetPreambleLength(LoRaDevice.PrebSymb);                //设置接收时的前导码长�?
+				SX1276LoRaSetPreambleLength(LoRaDevice.PrebSymb);                //设置接收时的前导码长度
         printf("\r\nSet PreambleLength = %d",LoRaDevice.PrebSymb);
 		
 				SetLoRaRx();
@@ -587,7 +587,7 @@ void lora_protocol_process(void)
 			if(RfResult == RF_RX_DONE)
 			{
 				gateway_process();
-				SX1276LoRaSetPreambleLength(Preamble_Default);      //第一个接收窗口收�? 数据后：恢复 前导码为默认值：8
+				SX1276LoRaSetPreambleLength(Preamble_Default);      //第一个接收窗口收到 数据后：恢复 前导码为默认值：8
         printf("\r\nResove PreambleLength = %d",Preamble_Default);
 				LoRaProtocolState = sIDLE;
 				SetLoRaSleep();
@@ -617,7 +617,7 @@ void lora_protocol_process(void)
 			}
 			if(RfResult == RF_RX_TIMEOUT)
 			{
-				SX1276LoRaSetPreambleLength(Preamble_Default);      //第二个接收窗口没有收到数�? 恢复 前导码为默认值：8
+				SX1276LoRaSetPreambleLength(Preamble_Default);      //第二个接收窗口没有收到数据 恢复 前导码为默认值：8
         printf("\r\nResove PreambleLength = %d",Preamble_Default);
 				SetLoRaSleep();
 				LoRaProtocolState = sIDLE;
@@ -641,7 +641,7 @@ void uart_Process(void)
 				if(LoRaProtocolState != sIDLE)
 					return;
 
-				SetLoRaCommPram();                             //LORA通讯参数初始�?
+				SetLoRaCommPram();                             //LORA通讯参数初始化
 				UsartType.RX_flag=0;	// clean flag	
 				if(UsartType.RX_Size >= PAYLOAD_DATABUFF_SIZE)
 					UsartType.RX_Size = PAYLOAD_DATABUFF_SIZE;
@@ -658,7 +658,7 @@ void uart_Process(void)
 				for(int i=0;i<PayLoadLen;i++)
 					Debug("0x%2x ",PayLoadBuff[i]);
 									
-				LoRaProtocolState = TXWindow1;             //设置发�?�状�?
+				LoRaProtocolState = TXWindow1;             //设置发送状态
 			} 
 		if(UsartType.TX_flag == 1)    	//  RF --> UART  
 		{
@@ -705,7 +705,7 @@ void system_Status_process(void)
 {
 	if(RecvGatewayCmd == 1)
 	{
-		if((GET_TICK_COUNT( ) - RecvGatewayCmdTimeOut) > DEVICE_RESPONSE_TIMEOUT)   //设备超时无反�?
+		if((GET_TICK_COUNT( ) - RecvGatewayCmdTimeOut) > DEVICE_RESPONSE_TIMEOUT)   //设备超时无反馈
 		{
 			RecvGatewayCmd = 0;
 		}
@@ -724,7 +724,7 @@ void system_Status_process(void)
 		SystemSleep(LoRaDevice.Heartbeat);
 		Debug("\r\nSystem Wake up!");
 		
-    LoRaNodeHeartBreath();                            //苏醒后进入心�?
+    LoRaNodeHeartBreath();                            //苏醒后进入心跳
 	}
 
 }
